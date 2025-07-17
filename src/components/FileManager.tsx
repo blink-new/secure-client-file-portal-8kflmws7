@@ -42,40 +42,16 @@ export function FileManager({ refreshTrigger }: FileManagerProps) {
       setLoading(true)
       const user = await blink.auth.me()
       
-      // Try to load from database, fallback to localStorage if database not available
-      try {
-        const userFiles = await blink.db.files.list({
-          where: { userId: user.id },
-          orderBy: { uploadedAt: 'desc' }
-        })
-        
-        setFiles(userFiles)
-        
-        // Calculate total storage used
-        const total = userFiles.reduce((sum, file) => sum + file.fileSize, 0)
-        setTotalStorage(total)
-      } catch (dbError) {
-        console.warn('Database not available, using localStorage:', dbError)
-        
-        // Fallback to localStorage
-        const storageKey = `files_${user.id}`
-        const storedFiles = localStorage.getItem(storageKey)
-        const userFiles = storedFiles ? JSON.parse(storedFiles) : []
-        
-        setFiles(userFiles)
-        
-        // Calculate total storage used
-        const total = userFiles.reduce((sum: number, file: FileRecord) => sum + file.fileSize, 0)
-        setTotalStorage(total)
-        
-        if (userFiles.length === 0) {
-          toast({
-            title: "Database Setup Required",
-            description: "Database tables need to be created. Files will be stored locally for now.",
-            variant: "default"
-          })
-        }
-      }
+      // Use localStorage for file storage (database not available)
+      const storageKey = `files_${user.id}`
+      const storedFiles = localStorage.getItem(storageKey)
+      const userFiles = storedFiles ? JSON.parse(storedFiles) : []
+      
+      setFiles(userFiles)
+      
+      // Calculate total storage used
+      const total = userFiles.reduce((sum: number, file: FileRecord) => sum + file.fileSize, 0)
+      setTotalStorage(total)
     } catch (error) {
       console.error('Error loading files:', error)
       toast({
@@ -103,19 +79,12 @@ export function FileManager({ refreshTrigger }: FileManagerProps) {
       // Delete from storage
       await blink.storage.remove(`clients/${user.id}/${file.fileName}`)
       
-      // Try to delete from database, fallback to localStorage
-      try {
-        await blink.db.files.delete(file.id)
-      } catch (dbError) {
-        console.warn('Database not available, updating localStorage:', dbError)
-        
-        // Update localStorage
-        const storageKey = `files_${user.id}`
-        const storedFiles = localStorage.getItem(storageKey)
-        const userFiles = storedFiles ? JSON.parse(storedFiles) : []
-        const updatedFiles = userFiles.filter((f: FileRecord) => f.id !== file.id)
-        localStorage.setItem(storageKey, JSON.stringify(updatedFiles))
-      }
+      // Update localStorage
+      const storageKey = `files_${user.id}`
+      const storedFiles = localStorage.getItem(storageKey)
+      const userFiles = storedFiles ? JSON.parse(storedFiles) : []
+      const updatedFiles = userFiles.filter((f: FileRecord) => f.id !== file.id)
+      localStorage.setItem(storageKey, JSON.stringify(updatedFiles))
       
       // Update local state
       setFiles(prev => prev.filter(f => f.id !== file.id))

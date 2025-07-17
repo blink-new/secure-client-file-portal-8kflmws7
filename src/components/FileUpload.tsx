@@ -64,7 +64,7 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
           }
         )
 
-        // Save file record to database or localStorage
+        // Save file record to localStorage
         const fileRecord = {
           id: Math.random().toString(36).substr(2, 9),
           fileName: file.name,
@@ -75,18 +75,12 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
           uploadedAt: new Date().toISOString()
         }
         
-        try {
-          await blink.db.files.create(fileRecord)
-        } catch (dbError) {
-          console.warn('Database not available, saving to localStorage:', dbError)
-          
-          // Save to localStorage as fallback
-          const storageKey = `files_${user.id}`
-          const storedFiles = localStorage.getItem(storageKey)
-          const userFiles = storedFiles ? JSON.parse(storedFiles) : []
-          userFiles.push(fileRecord)
-          localStorage.setItem(storageKey, JSON.stringify(userFiles))
-        }
+        // Save to localStorage
+        const storageKey = `files_${user.id}`
+        const storedFiles = localStorage.getItem(storageKey)
+        const userFiles = storedFiles ? JSON.parse(storedFiles) : []
+        userFiles.push(fileRecord)
+        localStorage.setItem(storageKey, JSON.stringify(userFiles))
 
         setUploadingFiles(prev => 
           prev.map(f => 
