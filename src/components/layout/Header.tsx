@@ -1,13 +1,15 @@
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { LogOut, Shield } from "lucide-react"
+import { LogOut, Shield, Settings } from "lucide-react"
 import { blink } from "@/blink/client"
 
 interface HeaderProps {
   user: any
+  onAdminToggle?: () => void
+  showAdminButton?: boolean
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user, onAdminToggle, showAdminButton = false }: HeaderProps) {
   const handleLogout = () => {
     blink.auth.logout()
   }
@@ -35,6 +37,17 @@ export function Header({ user }: HeaderProps) {
               {(user?.displayName || user?.email || 'U').charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
+          {showAdminButton && onAdminToggle && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onAdminToggle}
+              className="text-orange-600 hover:text-orange-700"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Admin
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             size="sm" 

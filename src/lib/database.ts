@@ -102,7 +102,7 @@ export class DatabaseService {
   }) {
     const { limit = 50, fileId, action } = options || {}
     
-    let whereClause: any = { userId }
+    const whereClause: any = { userId }
     
     if (fileId) {
       whereClause.fileId = fileId

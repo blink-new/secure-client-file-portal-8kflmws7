@@ -3,6 +3,8 @@ import { Header } from '@/components/layout/Header'
 import { FileUpload } from '@/components/FileUpload'
 import { FileManager } from '@/components/FileManager'
 import { EmailLogin } from '@/components/auth/EmailLogin'
+import { AdminDashboard } from '@/components/admin/AdminDashboard'
+import { AdminGuard } from '@/components/admin/AdminGuard'
 import { Toaster } from '@/components/ui/toaster'
 import { blink } from '@/blink/client'
 
@@ -10,6 +12,7 @@ function App() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [showAdmin, setShowAdmin] = useState(false)
 
   useEffect(() => {
     const unsubscribe = blink.auth.onAuthStateChanged((state) => {
@@ -38,9 +41,27 @@ function App() {
     return <EmailLogin />
   }
 
+  if (showAdmin) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header user={user} onAdminToggle={() => setShowAdmin(false)} showAdminButton={false} />
+        
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto">
+            <AdminGuard onBack={() => setShowAdmin(false)}>
+              <AdminDashboard />
+            </AdminGuard>
+          </div>
+        </main>
+
+        <Toaster />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={user} />
+      <Header user={user} onAdminToggle={() => setShowAdmin(true)} showAdminButton={true} />
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
