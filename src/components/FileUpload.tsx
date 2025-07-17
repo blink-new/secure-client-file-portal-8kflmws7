@@ -22,6 +22,22 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([])
   const { toast } = useToast()
 
+  const logFileAccess = async (fileId: string, action: string) => {
+    try {
+      await blink.db.fileAccessLogs.create({
+        id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        fileId,
+        userId: (await blink.auth.me()).id,
+        action,
+        accessedAt: new Date().toISOString(),
+        ipAddress: '', // Could be populated from request headers
+        userAgent: navigator.userAgent
+      })
+    } catch (error) {
+      console.error('Failed to log file access:', error)
+    }
+  }
+
   const handleFiles = useCallback(async (files: File[]) => {
     const user = await blink.auth.me()
     
@@ -46,10 +62,12 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
       setUploadingFiles(prev => [...prev, uploadingFile])
 
       try {
-        // Upload to user's dedicated folder
+        const storagePath = `clients/${user.id}/${file.name}`
+        
+        // Upload to storage
         const { publicUrl } = await blink.storage.upload(
           file,
-          `clients/${user.id}/${file.name}`,
+          storagePath,
           {
             upsert: true,
             onProgress: (percent) => {
@@ -64,23 +82,22 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
           }
         )
 
-        // Save file record to localStorage
-        const fileRecord = {
-          id: Math.random().toString(36).substr(2, 9),
+        // Save file record to database
+        const fileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        
+        await blink.db.files.create({
+          id: fileId,
+          userId: user.id,
           fileName: file.name,
           fileSize: file.size,
           fileType: file.type,
+          storagePath,
           publicUrl,
-          userId: user.id,
           uploadedAt: new Date().toISOString()
-        }
-        
-        // Save to localStorage
-        const storageKey = `files_${user.id}`
-        const storedFiles = localStorage.getItem(storageKey)
-        const userFiles = storedFiles ? JSON.parse(storedFiles) : []
-        userFiles.push(fileRecord)
-        localStorage.setItem(storageKey, JSON.stringify(userFiles))
+        })
+
+        // Log the upload action
+        await logFileAccess(fileId, 'upload')
 
         setUploadingFiles(prev => 
           prev.map(f => 
