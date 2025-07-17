@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Header } from '@/components/layout/Header'
 import { FileUpload } from '@/components/FileUpload'
 import { FileManager } from '@/components/FileManager'
+import { EmailLogin } from '@/components/auth/EmailLogin'
 import { Toaster } from '@/components/ui/toaster'
 import { blink } from '@/blink/client'
 
@@ -34,29 +35,7 @@ function App() {
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-6">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-6">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">SecurePortal</h1>
-            <p className="text-gray-600 mb-6">
-              Secure client file upload and management portal
-            </p>
-            <button
-              onClick={() => blink.auth.login()}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              Sign In to Continue
-            </button>
-          </div>
-        </div>
-      </div>
-    )
+    return <EmailLogin />
   }
 
   return (
